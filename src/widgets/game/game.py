@@ -161,7 +161,7 @@ class GameLibraryCard(MDCard, BorderBehavior):
                 self.run_btn.disabled = False
     
     def launch_game(self, instance):
-        os.system(f"cd {self.save_path} && chmod +x start* && ./start* &")
+        os.system(f"cd {self.save_path} && bash ./start* &")
         
     def open_location(self, instance):
         os.system(f"xdg-open {self.save_path} &")

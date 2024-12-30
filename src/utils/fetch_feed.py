@@ -153,9 +153,9 @@ class ReleasesFeed:
                     continue
                 
                 if json_array[i]["cover"] is not None:
-                    if json_array[i]["summary"] is None:
-                        json_array[i]["summary"] = "No summary available"
-                    continue
+                    # In case of missing or too short summary, we download the cover and summary anew from IGDB
+                    if json_array[i]["summary"] is not None or len(json_array[i]["summary"]) > 40:
+                        continue
 
                 json_array[i]["cover"], json_array[i]["summary"] = self.get_cover_and_summary(
                     json_array[i]["name"].replace("–", "-").replace("’", "'")

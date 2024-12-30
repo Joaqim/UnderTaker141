@@ -76,12 +76,13 @@ class ReleasesFeed:
         
         # Extract the description text between 6th and 7th <br>
         br_tags = soup.find_all('br')
-        if len(br_tags) > 5:
-            description = br_tags[5].find_next_sibling(text=True).strip()
-        else:
-            description = None
-
-        return capsule_image_link, description
+        summary = None
+        for i in range(len(br_tags)):
+            summary_candidate = (br_tags[i].find_next_sibling(text=True) or "").strip()
+            if len(summary_candidate) > 50:
+                summary = summary_candidate
+                break
+        return capsule_image_link, summary
     
     def get_cover_and_summary(self, game):
         

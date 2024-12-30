@@ -1,8 +1,9 @@
 import requests
 import json
+from bs4 import BeautifulSoup
 from .thread_with_return import ThreadWithReturnValue
 from igdb.wrapper import IGDBWrapper
-import os
+import re
 import numpy as np
 import time
 
@@ -57,9 +58,30 @@ class ReleasesFeed:
             formated_feed.append(schema.copy())
             formated_feed[-1]["name"] = record["name"]
             formated_feed[-1]["size"] = record["total_size"]
-            formated_feed[-1]["magnet"] = record["magnet_link"]    
-            
+            formated_feed[-1]["magnet"] = record["magnet_link"]
+            try:
+                formated_feed[-1]["cover"], formated_feed[-1]["summary"] = self.get_cover_and_description_from_feed(record)
+            except:
+                pass
         return formated_feed
+
+    def get_cover_and_description_from_feed(self, record):
+        # Parse the HTML
+        soup = BeautifulSoup(record['description'], 'html.parser')
+
+        # Extract the first image
+        hero_image_link = soup.find('img')['src']
+
+        capsule_image_link = re.sub(r"(\w+)\.jpg", "library_600x900.jpg", hero_image_link)
+        
+        # Extract the description text between 6th and 7th <br>
+        br_tags = soup.find_all('br')
+        if len(br_tags) > 5:
+            description = br_tags[5].find_next_sibling(text=True).strip()
+        else:
+            description = None
+
+        return capsule_image_link, description
     
     def get_cover_and_summary(self, game):
         
@@ -130,7 +152,10 @@ class ReleasesFeed:
                 if '\"' in json_array[i]["name"]:
                     continue
                 
-                #print(json_array[i]["no"])
+                if json_array[i]["cover"] is not None:
+                    if json_array[i]["summary"] is None:
+                        json_array[i]["summary"] = "No summary available"
+                    continue
 
                 json_array[i]["cover"], json_array[i]["summary"] = self.get_cover_and_summary(
                     json_array[i]["name"].replace("–", "-").replace("’", "'")

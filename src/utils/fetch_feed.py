@@ -3,7 +3,7 @@ import json
 from bs4 import BeautifulSoup
 from .thread_with_return import ThreadWithReturnValue
 from igdb.wrapper import IGDBWrapper
-import os
+import re
 import numpy as np
 import time
 
@@ -70,16 +70,18 @@ class ReleasesFeed:
         soup = BeautifulSoup(record['description'], 'html.parser')
 
         # Extract the first image
-        hero_image = soup.find('img')['src']
+        hero_image_link = soup.find('img')['src']
 
-        # Extract the description text between <br><br>
+        capsule_image_link = re.sub(r"(\w+)\.jpg", "library_600x900.jpg")
+        
+        # Extract the description text between 6th and 7th <br>
         br_tags = soup.find_all('br')
-        if len(br_tags) >= 5:
+        if len(br_tags) > 5:
             description = br_tags[5].find_next_sibling(text=True).strip()
         else:
             description = None
 
-        return hero_image, description
+        return capsule_image_link, description
     
     def get_cover_and_summary(self, game):
         

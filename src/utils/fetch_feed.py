@@ -69,10 +69,15 @@ class ReleasesFeed:
         # Parse the HTML
         soup = BeautifulSoup(record['description'], 'html.parser')
 
-        # Extract the first image
+        # Extract provided Game cover image url
         hero_image_link = soup.find('img')['src']
 
-        capsule_image_link = re.sub(r"(\w+)\.jpg", "library_600x900.jpg", hero_image_link)
+        # We only rely on these links: https://cdn.akamai.steamstatic.com/steam/apps/1295920/library_hero.jpg
+        if "steamstatic" in hero_image_link:
+            capsule_image_link = re.sub(r"(\w+)\.jpg", "library_600x900.jpg", hero_image_link)
+        else:
+            # We will use fallback to fetch Summary and Cover from IGDB
+            return None, None
         
         # Extract the description text between 6th and 7th <br>
         br_tags = soup.find_all('br')

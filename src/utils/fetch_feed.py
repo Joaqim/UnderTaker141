@@ -1,5 +1,6 @@
 import requests
 import json
+from bs4 import BeautifulSoup
 from .thread_with_return import ThreadWithReturnValue
 from igdb.wrapper import IGDBWrapper
 import os
@@ -57,9 +58,28 @@ class ReleasesFeed:
             formated_feed.append(schema.copy())
             formated_feed[-1]["name"] = record["name"]
             formated_feed[-1]["size"] = record["total_size"]
-            formated_feed[-1]["magnet"] = record["magnet_link"]    
-            
+            formated_feed[-1]["magnet"] = record["magnet_link"]
+            try:
+                formated_feed[-1]["cover"], formated_feed[-1]["summary"] = self.get_cover_and_description_from_feed(record)
+            except:
+                pass
         return formated_feed
+
+    def get_cover_and_description_from_feed(self, record):
+        # Parse the HTML
+        soup = BeautifulSoup(record['description'], 'html.parser')
+
+        # Extract the first image
+        hero_image = soup.find('img')['src']
+
+        # Extract the description text between <br><br>
+        br_tags = soup.find_all('br')
+        if len(br_tags) >= 5:
+            description = br_tags[5].find_next_sibling(text=True).strip()
+        else:
+            description = None
+
+        return hero_image, description
     
     def get_cover_and_summary(self, game):
         
@@ -130,7 +150,10 @@ class ReleasesFeed:
                 if '\"' in json_array[i]["name"]:
                     continue
                 
-                #print(json_array[i]["no"])
+                if json_array[i]["cover"] is not None:
+                    if json_array[i]["summary"] is None:
+                        json_array[i]["summary"] = "No summary available"
+                    continue
 
                 json_array[i]["cover"], json_array[i]["summary"] = self.get_cover_and_summary(
                     json_array[i]["name"].replace("–", "-").replace("’", "'")

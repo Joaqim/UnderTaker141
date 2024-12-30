@@ -76,12 +76,13 @@ class ReleasesFeed:
         
         # Extract the description text between 6th and 7th <br>
         br_tags = soup.find_all('br')
-        if len(br_tags) > 5:
-            description = br_tags[5].find_next_sibling(text=True).strip()
-        else:
-            description = None
-
-        return capsule_image_link, description
+        summary = None
+        for i in range(len(br_tags)):
+            summary_candidate = (br_tags[i].find_next_sibling(text=True) or "").strip()
+            if len(summary_candidate) > 50 and not "jc141" in summary_candidate:
+                summary = summary_candidate
+                break
+        return capsule_image_link, summary
     
     def get_cover_and_summary(self, game):
         
@@ -153,8 +154,7 @@ class ReleasesFeed:
                     continue
                 
                 if json_array[i]["cover"] is not None:
-                    # In case of missing or too short summary, we download the cover and summary anew from IGDB
-                    if json_array[i]["summary"] is not None or len(json_array[i]["summary"]) > 40:
+                    if json_array[i]["summary"] is not None:
                         continue
 
                 json_array[i]["cover"], json_array[i]["summary"] = self.get_cover_and_summary(
